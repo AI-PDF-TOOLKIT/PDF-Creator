@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Creator</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4a6bff;
+      --secondary-color: #f8f9fa;
+      --hover-color: #3a56d4;
+      --border-color: #ddd;
+      --text-color: #333;
+      --light-text: #6c757d;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: #f5f7ff;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h2, h3 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    
+    h2 {
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.2);
+    }
+    
+    input[type="file"] {
+      padding: 8px;
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    
+    button:hover {
+      background-color: var(--hover-color);
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .file-info {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--light-text);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .option-group {
+      margin-bottom: 15px;
+    }
+    
+    .divider {
+      height: 1px;
+      background-color: var(--border-color);
+      margin: 25px 0;
+    }
+    
+    @media (max-width: 600px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2><i class="fas fa-file-pdf"></i> Image to PDF Converter</h2>
+    
+    <div class="option-group">
+      <label for="images"><i class="fas fa-images"></i> Pilih gambar:</label>
+      <input type="file" id="images" multiple>
+      <div id="imageInfo" class="file-info" style="display: none;">
+        <i class="fas fa-info-circle"></i> <span id="imageCount">0</span> gambar dipilih
+      </div>
+    </div>
+    
+    <div class="options-grid">
+      <div class="option-group">
+        <label for="sortOrder"><i class="fas fa-sort-alpha-down"></i> Urutkan gambar:</label>
+        <select id="sortOrder">
+          <option value="az">Nama A-Z</option>
+          <option value="za">Nama Z-A</option>
+        </select>
+      </div>
+      
+      <div class="option-group">
+        <label for="paperSize"><i class="fas fa-file-alt"></i> Ukuran Kertas:</label>
+        <select id="paperSize">
+          <option value="a4">A4</option>
+          <option value="letter">Letter</option>
+          <option value="legal">Legal</option>
+        </select>
+      </div>
+      
+      <div class="option-group">
+        <label for="orientation"><i class="fas fa-arrows-alt-h"></i> Orientasi:</label>
+        <select id="orientation">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="option-group">
+      <label for="pdfName"><i class="fas fa-file-signature"></i> Nama File PDF:</label>
+      <input type="text" id="pdfName" placeholder="contoh: hasilku.pdf" value="output.pdf">
+    </div>
+    
+    <button onclick="generatePDF()">
+      <i class="fas fa-file-export"></i> Buat PDF
+    </button>
+  </div>
+  
+  <div class="card">
+    <h3><i class="fas fa-object-group"></i> Merge PDF (Opsional)</h3>
+    
+    <div class="option-group">
+      <label for="mergeFiles"><i class="fas fa-file-pdf"></i> Pilih file PDF:</label>
+      <input type="file" id="mergeFiles" multiple accept="application/pdf">
+      <div id="pdfInfo" class="file-info" style="display: none;">
+        <i class="fas fa-info-circle"></i> <span id="pdfCount">0</span> file PDF dipilih
+      </div>
+    </div>
+    
+    <button onclick="mergePDF()">
+      <i class="fas fa-file-archive"></i> Gabungkan PDF
+    </button>
+  </div>
+
+  <script>
+    // Display selected file counts
+    document.getElementById('images').addEventListener('change', function(e) {
+      const count = e.target.files.length;
+      const infoEl = document.getElementById('imageInfo');
+      document.getElementById('imageCount').textContent = count;
+      infoEl.style.display = count ? 'flex' : 'none';
+    });
+    
+    document.getElementById('mergeFiles').addEventListener('change', function(e) {
+      const count = e.target.files.length;
+      const infoEl = document.getElementById('pdfInfo');
+      document.getElementById('pdfCount').textContent = count;
+      infoEl.style.display = count ? 'flex' : 'none';
+    });
+
+    async function generatePDF() {
+      const files = [...document.getElementById("images").files];
+      const sortOrder = document.getElementById("sortOrder").value;
+      const orientation = document.getElementById("orientation").value;
+      const paperSize = document.getElementById("paperSize").value;
+      const pdfName = document.getElementById("pdfName").value || "output.pdf";
+
+      if (files.length === 0) {
+        alert("Pilih gambar terlebih dahulu!");
+        return;
+      }
+
+      // Sort files
+      files.sort((a, b) => {
+        return sortOrder === "az"
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+      });
+
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      
+      // Define paper sizes
+      const sizes = {
+        a4: { portrait: [595.28, 841.89], landscape: [841.89, 595.28] },
+        letter: { portrait: [612, 792], landscape: [792, 612] },
+        legal: { portrait: [612, 1008], landscape: [1008, 612] }
+      };
+      
+      const dimensions = sizes[paperSize][orientation];
+
+      for (const file of files) {
+        try {
+          const imgBytes = await file.arrayBuffer();
+          let img;
+          
+          if (file.type === "image/jpeg" || file.type === "image/jpg") {
+            img = await pdfDoc.embedJpg(imgBytes);
+          } else {
+            img = await pdfDoc.embedPng(imgBytes);
+          }
+
+          const page = pdfDoc.addPage(dimensions);
+          const scale = Math.min(dimensions[0] / img.width, dimensions[1] / img.height);
+          const imgWidth = img.width * scale;
+          const imgHeight = img.height * scale;
+          const x = (dimensions[0] - imgWidth) / 2;
+          const y = (dimensions[1] - imgHeight) / 2;
+          
+          page.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
+        } catch (error) {
+          console.error(`Error processing ${file.name}:`, error);
+        }
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      downloadPDF(pdfBytes, pdfName);
+    }
+
+    async function mergePDF() {
+      const files = [...document.getElementById("mergeFiles").files];
+      
+      if (files.length < 2) {
+        alert("Pilih minimal 2 file PDF untuk digabungkan!");
+        return;
+      }
+
+      const mergedPdf = await PDFLib.PDFDocument.create();
+
+      for (const file of files) {
+        try {
+          const pdfBytes = await file.arrayBuffer();
+          const pdf = await PDFLib.PDFDocument.load(pdfBytes);
+          const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          copiedPages.forEach((page) => mergedPdf.addPage(page));
+        } catch (error) {
+          console.error(`Error processing ${file.name}:`, error);
+          alert(`Gagal memproses ${file.name}. Pastikan file valid.`);
+        }
+      }
+
+      const pdfBytes = await mergedPdf.save();
+      downloadPDF(pdfBytes, "merged.pdf");
+    }
+    
+    function downloadPDF(pdfBytes, fileName) {
+      try {
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 100);
+      } catch (error) {
+        console.error("Error downloading PDF:", error);
+        alert("Gagal mengunduh PDF. Silakan coba lagi.");
+      }
+    }
+  </script>
+</body>
+  </html>
